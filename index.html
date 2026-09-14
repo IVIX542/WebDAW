@@ -29,6 +29,9 @@
                     <span class="icon">🎨</span> Diseño de Interfaces
                 </button>
             </nav>
+            <div class="sidebar-footer">
+                <button id="info-btn" class="info-btn" title="Atajos de teclado">ℹ️ Atajos</button>
+            </div>
         </aside>
 
         <!-- Main Content -->
@@ -139,6 +142,23 @@
             <div class="modal-actions">
                 <button id="confirm-cancel" class="cancel-btn">Cancelar</button>
                 <button id="confirm-accept" class="primary-btn danger-btn">Aceptar</button>
+            </div>
+        </div>
+
+        <!-- Shortcuts Modal -->
+        <div id="shortcuts-modal" class="custom-modal hidden">
+            <h3>Atajos de Teclado</h3>
+            <ul class="shortcuts-list">
+                <li><span>Ctrl + B</span> Negrita</li>
+                <li><span>Ctrl + I</span> Cursiva</li>
+                <li><span>Ctrl + U</span> Subrayado</li>
+                <li><span>Ctrl + 1</span> Título 1 (H1)</li>
+                <li><span>Ctrl + 2</span> Título 2 (H2)</li>
+                <li><span>Ctrl + P</span> Párrafo normal</li>
+                <li><span>Ctrl + S</span> Guardar apuntes</li>
+            </ul>
+            <div class="modal-actions">
+                <button id="shortcuts-close" class="primary-btn">Cerrar</button>
             </div>
         </div>
     </div>

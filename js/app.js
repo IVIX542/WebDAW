@@ -43,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctxRename = document.getElementById('ctx-rename');
     const ctxDelete = document.getElementById('ctx-delete');
 
+    const infoBtn = document.getElementById('info-btn');
+    const shortcutsModal = document.getElementById('shortcuts-modal');
+    const shortcutsClose = document.getElementById('shortcuts-close');
+
     let contextMenuTopicId = null;
 
     // Custom Modals Logic
@@ -126,6 +130,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateEditorVisibility();
             }
             await loadTopics();
+        }
+    });
+
+    // Shortcuts Modal
+    const closeShortcutsModal = () => {
+        if (!shortcutsModal.classList.contains('hidden')) {
+            shortcutsModal.classList.add('hidden');
+            modalOverlay.classList.add('hidden');
+        }
+    };
+
+    infoBtn.addEventListener('click', () => {
+        modalOverlay.classList.remove('hidden');
+        shortcutsModal.classList.remove('hidden');
+    });
+
+    shortcutsClose.addEventListener('click', closeShortcutsModal);
+
+    modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+            closeShortcutsModal();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeShortcutsModal();
         }
     });
 
@@ -352,6 +383,32 @@ document.addEventListener('DOMContentLoaded', () => {
             // Automatically save to DB so generated IDs are persisted instantly
             saveCurrentTopic();
         }, 1000);
+    });
+
+    editor.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+            let command = null;
+            let value = null;
+            
+            switch(e.key.toLowerCase()) {
+                case 'b': command = 'bold'; break;
+                case 'i': command = 'italic'; break;
+                case 'u': command = 'underline'; break;
+                case '1': command = 'formatBlock'; value = 'H1'; break;
+                case '2': command = 'formatBlock'; value = 'H2'; break;
+                case 'p': command = 'formatBlock'; value = 'P'; break;
+                case 's': 
+                    e.preventDefault();
+                    saveCurrentTopic().then(() => showSaveStatus());
+                    return;
+            }
+            
+            if (command) {
+                e.preventDefault();
+                document.execCommand(command, false, value);
+                updateSubtopicsSidebar();
+            }
+        }
     });
 
     toolBtns.forEach(btn => {

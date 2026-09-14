@@ -39,7 +39,7 @@ body {
 .logo h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
 .logo span { color: var(--accent-primary); }
 
-.nav-menu { display: flex; flex-direction: column; gap: 0.5rem; }
+.nav-menu { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
 .nav-item {
     background: transparent; border: none; color: var(--text-secondary);
     padding: 1rem 1.5rem; text-align: left; font-size: 1rem; font-family: inherit;
@@ -48,6 +48,10 @@ body {
 }
 .nav-item:hover { background: var(--bg-panel-hover); color: var(--text-primary); transform: translateX(5px); }
 .nav-item.active { background: var(--accent-primary); color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+
+.sidebar-footer { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-color); }
+.info-btn { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); color: var(--text-secondary); padding: 0.8rem; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.info-btn:hover { background: var(--bg-panel-hover); color: var(--text-primary); }
 
 /* Main Content */
 .main-content { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -266,6 +270,11 @@ body {
 .cancel-btn:hover { color: var(--text-primary); background: var(--bg-panel-hover); }
 .danger-btn { background: #ef4444; }
 .danger-btn:hover { background: #dc2626; box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4); }
+
+.shortcuts-list { list-style: none; margin-bottom: 1.5rem; }
+.shortcuts-list li { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: var(--text-secondary); }
+.shortcuts-list li:last-child { border-bottom: none; }
+.shortcuts-list li span { background: var(--bg-panel); padding: 0.3rem 0.6rem; border-radius: 4px; color: var(--accent-primary); font-family: monospace; font-size: 0.9rem; border: 1px solid var(--border-color); }
 
 .context-menu { position: fixed; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.5rem 0; min-width: 150px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); z-index: 900; }
 .context-menu button { display: block; width: 100%; text-align: left; padding: 0.8rem 1rem; background: transparent; border: none; color: var(--text-primary); cursor: pointer; font-family: inherit; font-size: 0.95rem; transition: background 0.2s; }
