@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DAW Notes App</title>
+    <meta name="description" content="Aplicación de apuntes para 2º de DAW">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>DAW<span>2</span></h1>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-subject="dwec">
+                    <span class="icon">💻</span> Entorno Cliente
+                </button>
+                <button class="nav-item" data-subject="dwes">
+                    <span class="icon">⚙️</span> Entorno Servidor
+                </button>
+                <button class="nav-item" data-subject="daw">
+                    <span class="icon">🚀</span> Despliegue
+                </button>
+                <button class="nav-item" data-subject="diw">
+                    <span class="icon">🎨</span> Diseño de Interfaces
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <h2 id="current-subject-title">Desarrollo Web en Entorno Cliente</h2>
+                
+                <div class="search-container">
+                    <input type="search" id="global-search" placeholder="🔍 Buscar en la teoría..." autocomplete="off">
+                    <div id="search-results" class="search-results-dropdown hidden"></div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="notes">Apuntes</button>
+                    <button class="tab-btn" data-tab="gallery">Galería</button>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Notes Section -->
+                <section id="notes-section" class="tab-content active">
+                    <div class="notes-layout">
+                        <!-- Topics Sidebar -->
+                        <div class="topics-sidebar">
+                            <div class="topics-header">
+                                <h3>Temas</h3>
+                                <button id="new-topic-btn" class="primary-btn small-btn">+ Nuevo</button>
+                            </div>
+                            <div id="topics-list" class="topics-list">
+                                <!-- Topics will be loaded here -->
+                            </div>
+                        </div>
+
+                        <!-- Editor Container -->
+                        <div class="editor-container hidden" id="editor-container">
+                            <h3 id="current-topic-title" class="topic-title-display"></h3>
+                            <div class="editor-toolbar">
+                                <div class="toolbar-group">
+                                    <button class="tool-btn" data-command="bold" title="Negrita"><b>B</b></button>
+                                    <button class="tool-btn" data-command="italic" title="Cursiva"><i>I</i></button>
+                                    <button class="tool-btn" data-command="underline" title="Subrayado"><u>U</u></button>
+                                </div>
+                                <div class="toolbar-group">
+                                    <button class="tool-btn" data-command="formatBlock" data-value="H1" title="Título 1">H1</button>
+                                    <button class="tool-btn" data-command="formatBlock" data-value="H2" title="Título 2">H2</button>
+                                    <button class="tool-btn" data-command="formatBlock" data-value="P" title="Párrafo">P</button>
+                                </div>
+                                <div class="toolbar-group">
+                                    <button class="tool-btn" data-command="insertUnorderedList" title="Lista">ul</button>
+                                    <button class="tool-btn" data-command="insertOrderedList" title="Lista numerada">ol</button>
+                                </div>
+                                <div class="toolbar-group">
+                                    <label class="tool-btn upload-btn" title="Insertar Foto en apuntes">
+                                        📷 <input type="file" id="note-image-input" accept="image/*" hidden>
+                                    </label>
+                                </div>
+                                <div class="toolbar-group ml-auto">
+                                    <button id="save-notes-btn" class="primary-btn">Guardar Apuntes</button>
+                                </div>
+                            </div>
+                            <div id="editor" class="rich-text-editor" contenteditable="true" placeholder="Escribe tus apuntes de teoría aquí..."></div>
+                            <div id="save-status" class="status-msg">Guardado localmente</div>
+                        </div>
+                        
+                        <div id="no-topic-selected" class="no-selection-msg">
+                            Selecciona un tema o crea uno nuevo para empezar a escribir.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Gallery Section -->
+                <section id="gallery-section" class="tab-content">
+                    <div class="gallery-header">
+                        <h3>Fotos y Recursos</h3>
+                        <label class="primary-btn upload-btn">
+                            Subir Foto <input type="file" id="gallery-image-input" accept="image/*" multiple hidden>
+                        </label>
+                    </div>
+                    <div id="gallery-grid" class="gallery-grid">
+                        <!-- Images will be rendered here -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="context-menu hidden">
+        <button id="ctx-rename">Renombrar Tema</button>
+        <button id="ctx-delete" class="danger">Eliminar Tema</button>
+    </div>
+
+    <!-- Custom Modals -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <!-- Prompt Modal -->
+        <div id="prompt-modal" class="custom-modal hidden">
+            <h3 id="prompt-title">Introduce un valor</h3>
+            <input type="text" id="prompt-input" autocomplete="off">
+            <div class="modal-actions">
+                <button id="prompt-cancel" class="cancel-btn">Cancelar</button>
+                <button id="prompt-confirm" class="primary-btn">Aceptar</button>
+            </div>
+        </div>
+
+        <!-- Confirm Modal -->
+        <div id="confirm-modal" class="custom-modal hidden">
+            <h3 id="confirm-message">¿Estás seguro?</h3>
+            <div class="modal-actions">
+                <button id="confirm-cancel" class="cancel-btn">Cancelar</button>
+                <button id="confirm-accept" class="primary-btn danger-btn">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/db.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
