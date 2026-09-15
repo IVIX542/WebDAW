@@ -1,4 +1,19 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // --- Configuration System ---
+    const DEFAULT_CONFIG = {
+        theme: { bgDark: '#0f111a', bgPanel: '#191c29', accent: '#6366f1', font: 'Inter' },
+        layout: { navPos: 'left', topicsPos: 'left' },
+        subjects: [
+            { id: 'dwec', name: 'Entorno Cliente', icon: '💻', color: '#6366f1' },
+            { id: 'dwes', name: 'Entorno Servidor', icon: '⚙️', color: '#10b981' },
+            { id: 'daw', name: 'Despliegue', icon: '🚀', color: '#f59e0b' },
+            { id: 'diw', name: 'Diseño de Interfaces', icon: '🎨', color: '#ec4899' }
+        ],
+        shortcuts: { bold: 'ctrl+b', italic: 'ctrl+i', underline: 'ctrl+u', h1: 'ctrl+1', h2: 'ctrl+2', p: 'ctrl+p', save: 'ctrl+s' }
+    };
+    let APP_CONFIG = JSON.parse(localStorage.getItem('webdaw_config')) || DEFAULT_CONFIG;
+
+    // --- State ---
     let currentSubject = 'dwec';
     let currentTopicId = null;
     
@@ -47,7 +62,67 @@ document.addEventListener('DOMContentLoaded', () => {
     const shortcutsModal = document.getElementById('shortcuts-modal');
     const shortcutsClose = document.getElementById('shortcuts-close');
 
-    let contextMenuTopicId = null;
+    // Config Modals Elements
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsCancel = document.getElementById('settings-cancel');
+    const settingsSave = document.getElementById('settings-save');
+
+    // Helper for formatting shortcuts
+    function formatShortcut(e) {
+        const keys = [];
+        if (e.ctrlKey || e.metaKey) keys.push('ctrl');
+        if (e.altKey) keys.push('alt');
+        if (e.shiftKey) keys.push('shift');
+        if (e.key !== 'Control' && e.key !== 'Meta' && e.key !== 'Alt' && e.key !== 'Shift') {
+            keys.push(e.key.toLowerCase());
+        }
+        return keys.join('+');
+    }
+
+    // --- Dynamic Application ---
+    function applyConfig() {
+        const root = document.documentElement;
+        root.style.setProperty('--bg-dark', APP_CONFIG.theme.bgDark);
+        root.style.setProperty('--bg-panel', APP_CONFIG.theme.bgPanel);
+        root.style.setProperty('--accent-primary', APP_CONFIG.theme.accent);
+        root.style.fontFamily = APP_CONFIG.theme.font + ', sans-serif';
+
+        const appContainer = document.querySelector('.app-container');
+        if (APP_CONFIG.layout.navPos === 'bottom') appContainer.classList.add('layout-nav-bottom');
+        else appContainer.classList.remove('layout-nav-bottom');
+
+        const notesLayout = document.querySelector('.notes-layout');
+        if (APP_CONFIG.layout.topicsPos === 'right') notesLayout.classList.add('layout-topics-right');
+        else notesLayout.classList.remove('layout-topics-right');
+
+        const navMenu = document.getElementById('nav-menu');
+        navMenu.innerHTML = '';
+        APP_CONFIG.subjects.forEach(subj => {
+            const btn = document.createElement('button');
+            btn.className = `nav-item ${currentSubject === subj.id ? 'active' : ''}`;
+            btn.dataset.subject = subj.id;
+            btn.innerHTML = `<span class="icon">${subj.icon}</span> ${subj.name}`;
+            btn.addEventListener('click', async () => {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                btn.classList.add('active');
+                currentSubject = subj.id;
+                currentTopicId = null;
+                updateEditorVisibility();
+                await loadTopics();
+                const activeSubj = APP_CONFIG.subjects.find(s => s.id === currentSubject);
+                if (activeSubj) document.getElementById('current-subject-title').textContent = activeSubj.name;
+            });
+            navMenu.appendChild(btn);
+        });
+
+        const activeSubj = APP_CONFIG.subjects.find(s => s.id === currentSubject);
+        if (activeSubj) document.getElementById('current-subject-title').textContent = activeSubj.name;
+        
+        localStorage.setItem('webdaw_config', JSON.stringify(APP_CONFIG));
+    }
+    
+    applyConfig();
 
     // Custom Modals Logic
     function customPrompt(title, defaultValue = '') {
@@ -141,47 +216,136 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    const closeSettingsModal = () => {
+        if (!settingsModal.classList.contains('hidden')) {
+            settingsModal.classList.add('hidden');
+            if (document.querySelectorAll('.custom-modal:not(.hidden)').length === 0) {
+                modalOverlay.classList.add('hidden');
+            }
+        }
+    };
+
     infoBtn.addEventListener('click', () => {
+        const list = document.getElementById('shortcuts-display-list');
+        list.innerHTML = `
+            <li><span>${APP_CONFIG.shortcuts.bold.toUpperCase()}</span> Negrita</li>
+            <li><span>${APP_CONFIG.shortcuts.italic.toUpperCase()}</span> Cursiva</li>
+            <li><span>${APP_CONFIG.shortcuts.underline.toUpperCase()}</span> Subrayado</li>
+            <li><span>${APP_CONFIG.shortcuts.h1.toUpperCase()}</span> Título 1 (H1)</li>
+            <li><span>${APP_CONFIG.shortcuts.h2.toUpperCase()}</span> Título 2 (H2)</li>
+            <li><span>${APP_CONFIG.shortcuts.p.toUpperCase()}</span> Párrafo normal</li>
+            <li><span>${APP_CONFIG.shortcuts.save.toUpperCase()}</span> Guardar apuntes</li>
+        `;
         modalOverlay.classList.remove('hidden');
         shortcutsModal.classList.remove('hidden');
     });
 
     shortcutsClose.addEventListener('click', closeShortcutsModal);
+    settingsCancel.addEventListener('click', closeSettingsModal);
 
     modalOverlay.addEventListener('click', (e) => {
         if (e.target === modalOverlay) {
             closeShortcutsModal();
+            closeSettingsModal();
         }
     });
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
             closeShortcutsModal();
+            closeSettingsModal();
         }
     });
 
-    // Subject mapping
-    const subjectNames = {
-        'dwec': 'Desarrollo Web en Entorno Cliente',
-        'dwes': 'Desarrollo Web en Entorno Servidor',
-        'daw': 'Despliegue de Aplicaciones Web',
-        'diw': 'Diseño de Interfaces Web'
-    };
+    // Settings Modal Open
+    settingsBtn.addEventListener('click', () => {
+        modalOverlay.classList.remove('hidden');
+        settingsModal.classList.remove('hidden');
+        
+        // Populate inputs
+        document.getElementById('cfg-bg-dark').value = APP_CONFIG.theme.bgDark;
+        document.getElementById('cfg-bg-panel').value = APP_CONFIG.theme.bgPanel;
+        document.getElementById('cfg-accent').value = APP_CONFIG.theme.accent;
+        document.getElementById('cfg-font').value = APP_CONFIG.theme.font;
+        document.getElementById('cfg-nav-pos').value = APP_CONFIG.layout.navPos;
+        document.getElementById('cfg-topics-pos').value = APP_CONFIG.layout.topicsPos;
 
-    // --- Navigation ---
-    navItems.forEach(item => {
-        item.addEventListener('click', async () => {
-            if(currentTopicId) await saveCurrentTopic(); // auto-save on switch
-            
-            navItems.forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
-            
-            currentSubject = item.dataset.subject;
-            subjectTitle.textContent = subjectNames[currentSubject];
-            
-            currentTopicId = null; // Reset selected topic
-            updateEditorVisibility();
-            await loadSubjectData();
+        // Populate Subjects
+        const subList = document.getElementById('cfg-subjects-list');
+        subList.innerHTML = '';
+        APP_CONFIG.subjects.forEach(subj => {
+            subList.innerHTML += `
+                <div class="subject-edit-row" data-id="${subj.id}">
+                    <input type="text" class="subj-icon" value="${subj.icon}">
+                    <input type="text" class="subj-name" value="${subj.name}">
+                    <input type="color" class="subj-color" value="${subj.color}">
+                </div>
+            `;
+        });
+
+        // Populate Shortcuts
+        const shortList = document.getElementById('cfg-shortcuts-list');
+        shortList.innerHTML = '';
+        Object.keys(APP_CONFIG.shortcuts).forEach(key => {
+            const row = document.createElement('div');
+            row.className = 'shortcut-edit-row';
+            row.innerHTML = `
+                <span>${key.toUpperCase()}</span>
+                <input type="text" readonly data-key="${key}" value="${APP_CONFIG.shortcuts[key]}">
+            `;
+            const input = row.querySelector('input');
+            input.addEventListener('keydown', (e) => {
+                e.preventDefault();
+                const combo = formatShortcut(e);
+                // Evitamos guardar si solo pulsó modificadores sin una letra
+                if (combo !== 'ctrl' && combo !== 'alt' && combo !== 'shift' && !combo.endsWith('+')) {
+                    input.value = combo;
+                }
+            });
+            shortList.appendChild(row);
+        });
+    });
+
+    // Settings Save
+    settingsSave.addEventListener('click', () => {
+        APP_CONFIG.theme.bgDark = document.getElementById('cfg-bg-dark').value;
+        APP_CONFIG.theme.bgPanel = document.getElementById('cfg-bg-panel').value;
+        APP_CONFIG.theme.accent = document.getElementById('cfg-accent').value;
+        APP_CONFIG.theme.font = document.getElementById('cfg-font').value;
+        
+        APP_CONFIG.layout.navPos = document.getElementById('cfg-nav-pos').value;
+        APP_CONFIG.layout.topicsPos = document.getElementById('cfg-topics-pos').value;
+
+        // Update Subjects
+        const newSubjects = [];
+        document.querySelectorAll('.subject-edit-row').forEach(row => {
+            newSubjects.push({
+                id: row.dataset.id,
+                icon: row.querySelector('.subj-icon').value,
+                name: row.querySelector('.subj-name').value,
+                color: row.querySelector('.subj-color').value
+            });
+        });
+        APP_CONFIG.subjects = newSubjects;
+
+        // Update Shortcuts
+        document.querySelectorAll('.shortcut-edit-row input').forEach(input => {
+            APP_CONFIG.shortcuts[input.dataset.key] = input.value.toLowerCase();
+        });
+
+        applyConfig();
+        closeSettingsModal();
+    });
+
+    // Settings Tabs logic
+    const setTabBtns = document.querySelectorAll('.set-tab-btn');
+    const setPanes = document.querySelectorAll('.set-pane');
+    setTabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setTabBtns.forEach(b => b.classList.remove('active'));
+            setPanes.forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.target).classList.add('active');
         });
     });
 
@@ -386,28 +550,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     editor.addEventListener('keydown', (e) => {
-        if (e.ctrlKey || e.metaKey) {
-            let command = null;
-            let value = null;
-            
-            switch(e.key.toLowerCase()) {
-                case 'b': command = 'bold'; break;
-                case 'i': command = 'italic'; break;
-                case 'u': command = 'underline'; break;
-                case '1': command = 'formatBlock'; value = 'H1'; break;
-                case '2': command = 'formatBlock'; value = 'H2'; break;
-                case 'p': command = 'formatBlock'; value = 'P'; break;
-                case 's': 
-                    e.preventDefault();
-                    saveCurrentTopic().then(() => showSaveStatus());
-                    return;
+        const currentCombo = formatShortcut(e);
+        
+        // Bloquear atajos nativos del navegador que causan comportamientos duplicados
+        const nativeCombos = ['ctrl+b', 'ctrl+i', 'ctrl+u', 'ctrl+s'];
+        if (nativeCombos.includes(currentCombo)) {
+            e.preventDefault();
+        }
+
+        let command = null;
+        let value = null;
+        
+        for (const [key, combo] of Object.entries(APP_CONFIG.shortcuts)) {
+            if (currentCombo === combo) {
+                switch(key) {
+                    case 'bold': command = 'bold'; break;
+                    case 'italic': command = 'italic'; break;
+                    case 'underline': command = 'underline'; break;
+                    case 'h1': command = 'formatBlock'; value = 'H1'; break;
+                    case 'h2': command = 'formatBlock'; value = 'H2'; break;
+                    case 'p': command = 'formatBlock'; value = 'P'; break;
+                    case 'save': 
+                        e.preventDefault();
+                        saveCurrentTopic().then(() => showSaveStatus());
+                        return;
+                }
+                break; // Found matching shortcut
             }
-            
-            if (command) {
-                e.preventDefault();
-                document.execCommand(command, false, value);
-                updateSubtopicsSidebar();
-            }
+        }
+        
+        if (command) {
+            e.preventDefault();
+            document.execCommand(command, false, value);
+            updateSubtopicsSidebar();
         }
     });
 

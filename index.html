@@ -15,22 +15,12 @@
             <div class="logo">
                 <h1>DAW<span>2</span></h1>
             </div>
-            <nav class="nav-menu">
-                <button class="nav-item active" data-subject="dwec">
-                    <span class="icon">💻</span> Entorno Cliente
-                </button>
-                <button class="nav-item" data-subject="dwes">
-                    <span class="icon">⚙️</span> Entorno Servidor
-                </button>
-                <button class="nav-item" data-subject="daw">
-                    <span class="icon">🚀</span> Despliegue
-                </button>
-                <button class="nav-item" data-subject="diw">
-                    <span class="icon">🎨</span> Diseño de Interfaces
-                </button>
+            <nav class="nav-menu" id="nav-menu">
+                <!-- Generado por JS -->
             </nav>
             <div class="sidebar-footer">
                 <button id="info-btn" class="info-btn" title="Atajos de teclado">ℹ️ Atajos</button>
+                <button id="settings-btn" class="info-btn" title="Configuración">⚙️ Ajustes</button>
             </div>
         </aside>
 
@@ -148,17 +138,87 @@
         <!-- Shortcuts Modal -->
         <div id="shortcuts-modal" class="custom-modal hidden">
             <h3>Atajos de Teclado</h3>
-            <ul class="shortcuts-list">
-                <li><span>Ctrl + B</span> Negrita</li>
-                <li><span>Ctrl + I</span> Cursiva</li>
-                <li><span>Ctrl + U</span> Subrayado</li>
-                <li><span>Ctrl + 1</span> Título 1 (H1)</li>
-                <li><span>Ctrl + 2</span> Título 2 (H2)</li>
-                <li><span>Ctrl + P</span> Párrafo normal</li>
-                <li><span>Ctrl + S</span> Guardar apuntes</li>
+            <ul class="shortcuts-list" id="shortcuts-display-list">
+                <!-- Generado por JS -->
             </ul>
             <div class="modal-actions">
                 <button id="shortcuts-close" class="primary-btn">Cerrar</button>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="custom-modal settings-modal hidden">
+            <h3>Configuración</h3>
+            <div class="settings-tabs">
+                <button class="set-tab-btn active" data-target="set-appearance">Apariencia</button>
+                <button class="set-tab-btn" data-target="set-layout">Vistas</button>
+                <button class="set-tab-btn" data-target="set-subjects">Asignaturas</button>
+                <button class="set-tab-btn" data-target="set-shortcuts">Atajos</button>
+            </div>
+            
+            <div class="settings-content">
+                <!-- Apariencia -->
+                <div id="set-appearance" class="set-pane active">
+                    <div class="set-group">
+                        <label>Color Principal (Fondo)</label>
+                        <input type="color" id="cfg-bg-dark">
+                    </div>
+                    <div class="set-group">
+                        <label>Color de Paneles</label>
+                        <input type="color" id="cfg-bg-panel">
+                    </div>
+                    <div class="set-group">
+                        <label>Color de Acento (Principal)</label>
+                        <input type="color" id="cfg-accent">
+                    </div>
+                    <div class="set-group">
+                        <label>Tipografía</label>
+                        <select id="cfg-font">
+                            <option value="Inter">Inter (Defecto)</option>
+                            <option value="Roboto">Roboto</option>
+                            <option value="Outfit">Outfit</option>
+                            <option value="monospace">Monospace</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Vistas -->
+                <div id="set-layout" class="set-pane">
+                    <div class="set-group">
+                        <label>Menú de Asignaturas</label>
+                        <select id="cfg-nav-pos">
+                            <option value="left">Izquierda</option>
+                            <option value="bottom">Abajo</option>
+                        </select>
+                    </div>
+                    <div class="set-group">
+                        <label>Panel de Temas</label>
+                        <select id="cfg-topics-pos">
+                            <option value="left">Izquierda</option>
+                            <option value="right">Derecha</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Asignaturas -->
+                <div id="set-subjects" class="set-pane">
+                    <div id="cfg-subjects-list">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+
+                <!-- Atajos -->
+                <div id="set-shortcuts" class="set-pane">
+                    <p class="set-help">Haz clic en el cuadro y presiona la combinación exacta de teclas que desees (ej. Ctrl+Shift+B).</p>
+                    <div id="cfg-shortcuts-list">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button id="settings-cancel" class="cancel-btn">Cancelar</button>
+                <button id="settings-save" class="primary-btn">Guardar Cambios</button>
             </div>
         </div>
     </div>
