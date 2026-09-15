@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+    <div id="mobile-overlay" class="mobile-overlay hidden"></div>
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -27,7 +28,12 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <h2 id="current-subject-title">Desarrollo Web en Entorno Cliente</h2>
+                <div class="header-left">
+                    <button id="mobile-menu-btn" class="mobile-toggle-btn" title="Menú">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <h2 id="current-subject-title">Desarrollo Web en Entorno Cliente</h2>
+                </div>
                 
                 <div class="search-container">
                     <input type="search" id="global-search" placeholder="🔍 Buscar en la teoría..." autocomplete="off">
@@ -45,10 +51,11 @@
                 <section id="notes-section" class="tab-content active">
                     <div class="notes-layout">
                         <!-- Topics Sidebar -->
-                        <div class="topics-sidebar">
+                        <div class="topics-sidebar" id="topics-sidebar">
                             <div class="topics-header">
                                 <h3>Temas</h3>
                                 <button id="new-topic-btn" class="primary-btn small-btn">+ Nuevo</button>
+                                <button id="close-topics-btn" class="mobile-close-btn">&times;</button>
                             </div>
                             <div id="topics-list" class="topics-list">
                                 <!-- Topics will be loaded here -->
@@ -57,6 +64,9 @@
 
                         <!-- Editor Container -->
                         <div class="editor-container hidden" id="editor-container">
+                            <div class="mobile-topic-header">
+                                <button id="mobile-topics-btn" class="primary-btn small-btn outline-btn">📚 Ver Temas</button>
+                            </div>
                             <h3 id="current-topic-title" class="topic-title-display"></h3>
                             <div class="editor-toolbar">
                                 <div class="toolbar-group">
@@ -87,7 +97,10 @@
                         </div>
                         
                         <div id="no-topic-selected" class="no-selection-msg">
-                            Selecciona un tema o crea uno nuevo para empezar a escribir.
+                            <div class="no-selection-content">
+                                <button id="mobile-topics-btn-empty" class="primary-btn mb-4 mobile-only">📚 Ver Temas</button>
+                                <p>Selecciona un tema o crea uno nuevo para empezar a escribir.</p>
+                            </div>
                         </div>
                     </div>
                 </section>

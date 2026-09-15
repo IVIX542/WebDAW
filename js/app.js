@@ -16,30 +16,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- State ---
     let currentSubject = 'dwec';
     let currentTopicId = null;
-    
+
     // UI Elements
     const navItems = document.querySelectorAll('.nav-item');
     const subjectTitle = document.getElementById('current-subject-title');
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
-    
+
     const topicsList = document.getElementById('topics-list');
     const newTopicBtn = document.getElementById('new-topic-btn');
     const editorContainer = document.getElementById('editor-container');
     const noTopicSelected = document.getElementById('no-topic-selected');
     const currentTopicTitle = document.getElementById('current-topic-title');
     const editor = document.getElementById('editor');
-    
+
     const toolBtns = document.querySelectorAll('.tool-btn[data-command]');
     const noteImageInput = document.getElementById('note-image-input');
     const saveNotesBtn = document.getElementById('save-notes-btn');
     const saveStatus = document.getElementById('save-status');
-    
+
     const galleryImageInput = document.getElementById('gallery-image-input');
     const galleryGrid = document.getElementById('gallery-grid');
 
     const searchInput = document.getElementById('global-search');
     const searchResults = document.getElementById('search-results');
+
+    // Mobile UI Elements
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const topicsSidebar = document.getElementById('topics-sidebar');
+    const mobileTopicsBtn = document.getElementById('mobile-topics-btn');
+    const mobileTopicsBtnEmpty = document.getElementById('mobile-topics-btn-empty');
+    const closeTopicsBtn = document.getElementById('close-topics-btn');
 
     // UI Elements for Modals
     const modalOverlay = document.getElementById('modal-overlay');
@@ -48,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const promptInput = document.getElementById('prompt-input');
     const promptCancel = document.getElementById('prompt-cancel');
     const promptConfirmBtn = document.getElementById('prompt-confirm');
-    
+
     const confirmModal = document.getElementById('confirm-modal');
     const confirmMessage = document.getElementById('confirm-message');
     const confirmCancel = document.getElementById('confirm-cancel');
@@ -118,10 +127,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const activeSubj = APP_CONFIG.subjects.find(s => s.id === currentSubject);
         if (activeSubj) document.getElementById('current-subject-title').textContent = activeSubj.name;
-        
+
         localStorage.setItem('webdaw_config', JSON.stringify(APP_CONFIG));
     }
-    
+
     applyConfig();
 
     // Custom Modals Logic
@@ -144,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const onConfirm = () => { cleanup(); resolve(promptInput.value); };
             const onCancel = () => { cleanup(); resolve(null); };
-            const onKey = (e) => { if(e.key === 'Enter') onConfirm(); if(e.key === 'Escape') onCancel(); };
+            const onKey = (e) => { if (e.key === 'Enter') onConfirm(); if (e.key === 'Escape') onCancel(); };
 
             promptConfirmBtn.addEventListener('click', onConfirm);
             promptCancel.addEventListener('click', onCancel);
@@ -173,10 +182,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Context Menu Logic
-    document.addEventListener('click', () => {
+    // Context Menu & General Clicks Logic
+    document.addEventListener('click', (e) => {
         if (!contextMenu.classList.contains('hidden')) {
             contextMenu.classList.add('hidden');
+        }
+
+        // Close main sidebar on mobile if clicked outside
+        if (sidebar && sidebar.classList.contains('open')) {
+            if (!sidebar.contains(e.target) &&
+                (!mobileMenuBtn || !mobileMenuBtn.contains(e.target))) {
+                closeAllMobileDrawers();
+            }
+        }
+
+        // Close topics sidebar on mobile if clicked outside
+        if (topicsSidebar && topicsSidebar.classList.contains('open')) {
+            if (!topicsSidebar.contains(e.target) &&
+                (!mobileTopicsBtn || !mobileTopicsBtn.contains(e.target)) &&
+                (!mobileTopicsBtnEmpty || !mobileTopicsBtnEmpty.contains(e.target))) {
+                closeAllMobileDrawers();
+            }
         }
     });
 
@@ -349,12 +375,82 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
+    // --- Mobile Interactivity ---
+    function closeAllMobileDrawers() {
+        sidebar.classList.remove('open');
+        topicsSidebar.classList.remove('open');
+        mobileOverlay.classList.remove('active');
+    }
+
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            mobileOverlay.classList.add('active');
+        });
+    }
+
+    if (mobileTopicsBtn) {
+        mobileTopicsBtn.addEventListener('click', () => {
+            topicsSidebar.classList.add('open');
+            mobileOverlay.classList.add('active');
+        });
+    }
+
+    if (mobileTopicsBtnEmpty) {
+        mobileTopicsBtnEmpty.addEventListener('click', () => {
+            topicsSidebar.classList.add('open');
+            mobileOverlay.classList.add('active');
+        });
+    }
+
+    if (closeTopicsBtn) {
+        closeTopicsBtn.addEventListener('click', () => {
+            topicsSidebar.classList.remove('open');
+            mobileOverlay.classList.remove('active');
+        });
+    }
+
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', (e) => {
+            // Only close if we clicked exactly on the overlay (preventing double triggering with modalOverlay if they stack)
+            if (e.target === mobileOverlay) {
+                closeAllMobileDrawers();
+            }
+        });
+    }
+
+    // Subject mapping
+    const subjectNames = {
+        'dwec': 'Desarrollo Web en Entorno Cliente',
+        'dwes': 'Desarrollo Web en Entorno Servidor',
+        'daw': 'Despliegue de Aplicaciones Web',
+        'diw': 'Diseño de Interfaces Web'
+    };
+
+    // --- Navigation ---
+    navItems.forEach(item => {
+        item.addEventListener('click', async () => {
+            closeAllMobileDrawers();
+            if (currentTopicId) await saveCurrentTopic(); // auto-save on switch
+
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+
+            currentSubject = item.dataset.subject;
+            subjectTitle.textContent = subjectNames[currentSubject];
+
+            currentTopicId = null; // Reset selected topic
+            updateEditorVisibility();
+            await loadSubjectData();
+        });
+    });
+
     // --- Tabs ---
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             tabBtns.forEach(b => b.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
-            
+
             btn.classList.add('active');
             document.getElementById(`${btn.dataset.tab}-section`).classList.add('active');
         });
@@ -386,7 +482,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 div.draggable = true;
 
                 div.addEventListener('click', async () => {
-                    if(currentTopicId && currentTopicId !== topic.id) {
+                    if (currentTopicId && currentTopicId !== topic.id) {
                         await saveCurrentTopic();
                     }
                     await selectTopic(topic.id, topic.title, topic.content);
@@ -414,11 +510,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function selectTopic(id, title, content) {
+        closeAllMobileDrawers();
         currentTopicId = id;
         currentTopicTitle.textContent = title;
         editor.innerHTML = content || '';
         updateEditorVisibility();
-        
+
         // Update active class in list
         document.querySelectorAll('.topic-item').forEach(el => el.classList.remove('active'));
         await loadTopics();
@@ -450,7 +547,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const navItem = document.createElement('div');
             navItem.className = `subtopic-nav ${header.tagName.toLowerCase()}-level`;
             navItem.textContent = header.textContent || 'Sin título';
-            
+
             navItem.addEventListener('click', (e) => {
                 e.stopPropagation();
                 header.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -498,27 +595,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function handleDrop(e) {
         if (e.stopPropagation) e.stopPropagation();
-        
+
         if (draggedItem !== this) {
             this.classList.remove('drag-over');
-            
+
             const list = topicsList;
             const items = Array.from(list.querySelectorAll('.topic-item'));
             const draggedIndex = items.indexOf(draggedItem);
             const targetIndex = items.indexOf(this);
-            
+
             if (draggedIndex < targetIndex) {
                 this.parentNode.insertBefore(draggedItem, this.nextSibling);
             } else {
                 this.parentNode.insertBefore(draggedItem, this);
             }
-            
+
             const updatedItems = Array.from(list.querySelectorAll('.topic-item'));
             const topicsOrderData = updatedItems.map((item, index) => ({
                 id: parseInt(item.dataset.id, 10),
                 order: index
             }));
-            
+
             try {
                 await window.DB.updateTopicsOrder(topicsOrderData);
                 await loadTopics();
@@ -551,7 +648,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     editor.addEventListener('keydown', (e) => {
         const currentCombo = formatShortcut(e);
-        
+
         // Bloquear atajos nativos del navegador que causan comportamientos duplicados
         const nativeCombos = ['ctrl+b', 'ctrl+i', 'ctrl+u', 'ctrl+s'];
         if (nativeCombos.includes(currentCombo)) {
@@ -560,17 +657,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let command = null;
         let value = null;
-        
+
         for (const [key, combo] of Object.entries(APP_CONFIG.shortcuts)) {
             if (currentCombo === combo) {
-                switch(key) {
+                switch (key) {
                     case 'bold': command = 'bold'; break;
                     case 'italic': command = 'italic'; break;
                     case 'underline': command = 'underline'; break;
                     case 'h1': command = 'formatBlock'; value = 'H1'; break;
                     case 'h2': command = 'formatBlock'; value = 'H2'; break;
                     case 'p': command = 'formatBlock'; value = 'P'; break;
-                    case 'save': 
+                    case 'save':
                         e.preventDefault();
                         saveCurrentTopic().then(() => showSaveStatus());
                         return;
@@ -578,7 +675,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 break; // Found matching shortcut
             }
         }
-        
+
         if (command) {
             e.preventDefault();
             document.execCommand(command, false, value);
@@ -607,7 +704,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             };
             reader.readAsDataURL(file);
         }
-        noteImageInput.value = ''; 
+        noteImageInput.value = '';
     });
 
     // Save Notes
@@ -642,7 +739,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             searchResults.classList.add('hidden');
             return;
         }
-        
+
         searchTimeout = setTimeout(async () => {
             try {
                 const results = await window.DB.searchTopics(query);
@@ -661,12 +758,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             results.forEach(res => {
                 const div = document.createElement('div');
                 div.className = 'search-result-item';
-                
+
                 // Extract snippet
                 const cleanContent = res.content.replace(/<[^>]+>/g, ' ');
                 const matchIndex = cleanContent.toLowerCase().indexOf(query.toLowerCase());
                 let snippet = '';
-                if(matchIndex !== -1) {
+                if (matchIndex !== -1) {
                     const start = Math.max(0, matchIndex - 20);
                     const end = Math.min(cleanContent.length, matchIndex + query.length + 20);
                     snippet = '...' + cleanContent.substring(start, end) + '...';
@@ -678,18 +775,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <h4>${subjectNames[res.subject]} - ${res.title}</h4>
                     <p>${snippet}</p>
                 `;
-                
+
                 div.addEventListener('click', async () => {
                     // Navigate to this result
                     searchInput.value = '';
                     searchResults.classList.add('hidden');
-                    
+
                     // Switch to the subject
                     document.querySelector(`.nav-item[data-subject="${res.subject}"]`).click();
-                    
+
                     // Switch to tab
                     document.querySelector('.tab-btn[data-tab="notes"]').click();
-                    
+
                     // Select topic
                     setTimeout(async () => {
                         await selectTopic(res.id, res.title, res.content);
@@ -703,7 +800,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Hide search when clicking outside
     document.addEventListener('click', (e) => {
-        if(!e.target.closest('.search-container')) {
+        if (!e.target.closest('.search-container')) {
             searchResults.classList.add('hidden');
         }
     });
@@ -726,12 +823,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 reader.readAsDataURL(file);
             }
         }
-        galleryImageInput.value = ''; 
+        galleryImageInput.value = '';
     });
 
     window.deleteImage = async (id) => {
         const confirmed = await customConfirm('¿Seguro que quieres borrar esta foto?');
-        if(confirmed) {
+        if (confirmed) {
             try {
                 await window.DB.deleteGalleryImage(id);
                 await loadGallery();
