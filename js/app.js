@@ -26,6 +26,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('global-search');
     const searchResults = document.getElementById('search-results');
 
+    // Mobile UI Elements
+    const mobileOverlay = document.getElementById('mobile-overlay');
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const topicsSidebar = document.getElementById('topics-sidebar');
+    const mobileTopicsBtn = document.getElementById('mobile-topics-btn');
+    const mobileTopicsBtnEmpty = document.getElementById('mobile-topics-btn-empty');
+    const closeTopicsBtn = document.getElementById('close-topics-btn');
+
     // UI Elements for Modals
     const modalOverlay = document.getElementById('modal-overlay');
     const promptModal = document.getElementById('prompt-modal');
@@ -98,10 +107,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Context Menu Logic
-    document.addEventListener('click', () => {
+    // Context Menu & General Clicks Logic
+    document.addEventListener('click', (e) => {
         if (!contextMenu.classList.contains('hidden')) {
             contextMenu.classList.add('hidden');
+        }
+        
+        // Close main sidebar on mobile if clicked outside
+        if (sidebar && sidebar.classList.contains('open')) {
+            if (!sidebar.contains(e.target) && 
+                (!mobileMenuBtn || !mobileMenuBtn.contains(e.target))) {
+                closeAllMobileDrawers();
+            }
+        }
+
+        // Close topics sidebar on mobile if clicked outside
+        if (topicsSidebar && topicsSidebar.classList.contains('open')) {
+            if (!topicsSidebar.contains(e.target) && 
+                (!mobileTopicsBtn || !mobileTopicsBtn.contains(e.target)) &&
+                (!mobileTopicsBtnEmpty || !mobileTopicsBtnEmpty.contains(e.target))) {
+                closeAllMobileDrawers();
+            }
         }
     });
 
@@ -168,9 +194,54 @@ document.addEventListener('DOMContentLoaded', () => {
         'diw': 'Diseño de Interfaces Web'
     };
 
+    // --- Mobile Interactivity ---
+    function closeAllMobileDrawers() {
+        sidebar.classList.remove('open');
+        topicsSidebar.classList.remove('open');
+        mobileOverlay.classList.remove('active');
+    }
+
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.add('open');
+            mobileOverlay.classList.add('active');
+        });
+    }
+
+    if (mobileTopicsBtn) {
+        mobileTopicsBtn.addEventListener('click', () => {
+            topicsSidebar.classList.add('open');
+            mobileOverlay.classList.add('active');
+        });
+    }
+
+    if (mobileTopicsBtnEmpty) {
+        mobileTopicsBtnEmpty.addEventListener('click', () => {
+            topicsSidebar.classList.add('open');
+            mobileOverlay.classList.add('active');
+        });
+    }
+
+    if (closeTopicsBtn) {
+        closeTopicsBtn.addEventListener('click', () => {
+            topicsSidebar.classList.remove('open');
+            mobileOverlay.classList.remove('active');
+        });
+    }
+
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', (e) => {
+            // Only close if we clicked exactly on the overlay (preventing double triggering with modalOverlay if they stack)
+            if (e.target === mobileOverlay) {
+                closeAllMobileDrawers();
+            }
+        });
+    }
+
     // --- Navigation ---
     navItems.forEach(item => {
         item.addEventListener('click', async () => {
+            closeAllMobileDrawers();
             if(currentTopicId) await saveCurrentTopic(); // auto-save on switch
             
             navItems.forEach(nav => nav.classList.remove('active'));
@@ -250,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function selectTopic(id, title, content) {
+        closeAllMobileDrawers();
         currentTopicId = id;
         currentTopicTitle.textContent = title;
         editor.innerHTML = content || '';
