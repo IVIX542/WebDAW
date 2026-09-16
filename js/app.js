@@ -669,6 +669,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     editor.addEventListener('keydown', (e) => {
+        // --- Indentation Logic (TAB / Shift+TAB) ---
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            
+            // Allow native list indentation if inside UL/OL
+            if (document.queryCommandState('insertUnorderedList') || document.queryCommandState('insertOrderedList')) {
+                document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+                return;
+            }
+
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            let currentBlock = selection.getRangeAt(0).startContainer;
+            if (currentBlock.nodeType === 3) currentBlock = currentBlock.parentNode;
+
+            // Find the closest block level element
+            while (currentBlock && currentBlock !== editor && !['P', 'H1', 'H2', 'DIV', 'LI'].includes(currentBlock.tagName)) {
+                currentBlock = currentBlock.parentNode;
+            }
+
+            if (currentBlock && currentBlock !== editor) {
+                let currentMargin = parseInt(window.getComputedStyle(currentBlock).marginLeft) || 0;
+                let newMargin = e.shiftKey ? Math.max(0, currentMargin - 40) : currentMargin + 40;
+                currentBlock.style.marginLeft = `${newMargin}px`;
+            }
+            return;
+        }
+
         const currentCombo = formatShortcut(e);
 
         // Bloquear atajos nativos del navegador que causan comportamientos duplicados
@@ -701,7 +729,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (command) {
             e.preventDefault();
             document.execCommand(command, false, value);
+            
+            // Auto-indent for headers explicitly set by shortcut
+            if (command === 'formatBlock' && (value === 'H1' || value === 'H2')) {
+                const selection = window.getSelection();
+                if (selection.rangeCount) {
+                    let currentBlock = selection.getRangeAt(0).startContainer;
+                    if (currentBlock.nodeType === 3) currentBlock = currentBlock.parentNode;
+                    while (currentBlock && currentBlock !== editor && !['P', 'H1', 'H2', 'DIV', 'LI'].includes(currentBlock.tagName)) {
+                        currentBlock = currentBlock.parentNode;
+                    }
+                    if (currentBlock && currentBlock !== editor) {
+                        currentBlock.style.marginLeft = value === 'H2' ? '40px' : '0px';
+                    }
+                }
+            }
+            
             updateSubtopicsSidebar();
+        }
+    });
+
+    // --- Auto-Indentation (Enter) ---
+    editor.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            let currentBlock = selection.getRangeAt(0).startContainer;
+            if (currentBlock.nodeType === 3) currentBlock = currentBlock.parentNode;
+            
+            while (currentBlock && currentBlock !== editor && !['P', 'H1', 'H2', 'DIV', 'LI'].includes(currentBlock.tagName)) {
+                currentBlock = currentBlock.parentNode;
+            }
+
+            if (currentBlock && (currentBlock.tagName === 'P' || currentBlock.tagName === 'DIV') && currentBlock !== editor) {
+                let prevBlock = currentBlock.previousElementSibling;
+                while (prevBlock && prevBlock.tagName === 'BR') {
+                    prevBlock = prevBlock.previousElementSibling;
+                }
+                if (prevBlock) {
+                    if (prevBlock.tagName === 'H2') {
+                        currentBlock.style.marginLeft = '40px';
+                    } else if (prevBlock.tagName === 'H1') {
+                        currentBlock.style.marginLeft = '0px';
+                    }
+                }
+            }
         }
     });
 
@@ -711,6 +783,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             const command = btn.dataset.command;
             const value = btn.dataset.value || null;
             document.execCommand(command, false, value);
+            
+            // Auto-indent for headers explicitly set by button
+            if (command === 'formatBlock' && (value === 'H1' || value === 'H2')) {
+                const selection = window.getSelection();
+                if (selection.rangeCount) {
+                    let currentBlock = selection.getRangeAt(0).startContainer;
+                    if (currentBlock.nodeType === 3) currentBlock = currentBlock.parentNode;
+                    while (currentBlock && currentBlock !== editor && !['P', 'H1', 'H2', 'DIV', 'LI'].includes(currentBlock.tagName)) {
+                        currentBlock = currentBlock.parentNode;
+                    }
+                    if (currentBlock && currentBlock !== editor) {
+                        currentBlock.style.marginLeft = value === 'H2' ? '40px' : '0px';
+                    }
+                }
+            }
+            
             editor.focus();
         });
     });
