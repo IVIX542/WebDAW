@@ -391,22 +391,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (mobileTopicsBtn) {
         mobileTopicsBtn.addEventListener('click', () => {
-            topicsSidebar.classList.add('open');
-            mobileOverlay.classList.add('active');
+            topicsSidebar.classList.toggle('open');
         });
     }
 
     if (mobileTopicsBtnEmpty) {
         mobileTopicsBtnEmpty.addEventListener('click', () => {
-            topicsSidebar.classList.add('open');
-            mobileOverlay.classList.add('active');
+            topicsSidebar.classList.toggle('open');
         });
     }
 
     if (closeTopicsBtn) {
         closeTopicsBtn.addEventListener('click', () => {
             topicsSidebar.classList.remove('open');
-            mobileOverlay.classList.remove('active');
         });
     }
 
@@ -415,6 +412,31 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Only close if we clicked exactly on the overlay (preventing double triggering with modalOverlay if they stack)
             if (e.target === mobileOverlay) {
                 closeAllMobileDrawers();
+            }
+        });
+    }
+
+    // Editor Toolbar More Options Logic
+    const moreToolsToggle = document.getElementById('more-tools-toggle');
+    const moreToolsMenu = document.getElementById('more-tools-menu');
+
+    if (moreToolsToggle && moreToolsMenu) {
+        moreToolsToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            moreToolsMenu.classList.toggle('show');
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', (e) => {
+            if (moreToolsMenu.classList.contains('show') && !moreToolsMenu.contains(e.target)) {
+                moreToolsMenu.classList.remove('show');
+            }
+        });
+
+        // Close when a tool is clicked inside the menu
+        moreToolsMenu.addEventListener('click', (e) => {
+            if (e.target.closest('.tool-btn')) {
+                moreToolsMenu.classList.remove('show');
             }
         });
     }

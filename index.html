@@ -74,22 +74,27 @@
                                     <button class="tool-btn" data-command="italic" title="Cursiva"><i>I</i></button>
                                     <button class="tool-btn" data-command="underline" title="Subrayado"><u>U</u></button>
                                 </div>
-                                <div class="toolbar-group">
-                                    <button class="tool-btn" data-command="formatBlock" data-value="H1" title="Título 1">H1</button>
-                                    <button class="tool-btn" data-command="formatBlock" data-value="H2" title="Título 2">H2</button>
-                                    <button class="tool-btn" data-command="formatBlock" data-value="P" title="Párrafo">P</button>
+                                <div class="toolbar-group mobile-only-btn">
+                                    <button id="more-tools-toggle" class="tool-btn" title="Más opciones">⋮</button>
                                 </div>
-                                <div class="toolbar-group">
-                                    <button class="tool-btn" data-command="insertUnorderedList" title="Lista">ul</button>
-                                    <button class="tool-btn" data-command="insertOrderedList" title="Lista numerada">ol</button>
+                                <div id="more-tools-menu" class="more-tools-menu">
+                                    <div class="toolbar-group">
+                                        <button class="tool-btn" data-command="formatBlock" data-value="H1" title="Título 1">H1</button>
+                                        <button class="tool-btn" data-command="formatBlock" data-value="H2" title="Título 2">H2</button>
+                                        <button class="tool-btn" data-command="formatBlock" data-value="P" title="Párrafo">P</button>
+                                    </div>
+                                    <div class="toolbar-group">
+                                        <button class="tool-btn" data-command="insertUnorderedList" title="Lista">ul</button>
+                                        <button class="tool-btn" data-command="insertOrderedList" title="Lista numerada">ol</button>
+                                    </div>
                                 </div>
-                                <div class="toolbar-group">
+                                <div class="toolbar-group ml-auto">
                                     <label class="tool-btn upload-btn" title="Insertar Foto en apuntes">
                                         📷 <input type="file" id="note-image-input" accept="image/*" hidden>
                                     </label>
                                 </div>
-                                <div class="toolbar-group ml-auto">
-                                    <button id="save-notes-btn" class="primary-btn">Guardar Apuntes</button>
+                                <div class="toolbar-group">
+                                    <button id="save-notes-btn" class="primary-btn">Guardar</button>
                                 </div>
                             </div>
                             <div id="editor" class="rich-text-editor" contenteditable="true" placeholder="Escribe tus apuntes de teoría aquí..."></div>
