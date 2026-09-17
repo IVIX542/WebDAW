@@ -9,9 +9,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             { id: 'daw', name: 'Despliegue', icon: '🚀', color: '#f59e0b' },
             { id: 'diw', name: 'Diseño de Interfaces', icon: '🎨', color: '#ec4899' }
         ],
-        shortcuts: { bold: 'ctrl+b', italic: 'ctrl+i', underline: 'ctrl+u', h1: 'ctrl+1', h2: 'ctrl+2', p: 'ctrl+p', save: 'ctrl+s' }
+        shortcuts: { bold: 'ctrl+b', italic: 'ctrl+i', underline: 'ctrl+u', h1: 'ctrl+1', h2: 'ctrl+2', p: 'ctrl+p', ul: 'ctrl+shift+u', ol: 'ctrl+shift+o', save: 'ctrl+s' }
     };
     let APP_CONFIG = JSON.parse(localStorage.getItem('webdaw_config')) || DEFAULT_CONFIG;
+    
+    // Migración de configuración antigua
+    if (!APP_CONFIG.shortcuts) APP_CONFIG.shortcuts = {};
+    if (!APP_CONFIG.shortcuts.ul) APP_CONFIG.shortcuts.ul = DEFAULT_CONFIG.shortcuts.ul;
+    if (!APP_CONFIG.shortcuts.ol) APP_CONFIG.shortcuts.ol = DEFAULT_CONFIG.shortcuts.ol;
 
     // --- State ---
     let currentSubject = 'dwec';
@@ -260,6 +265,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             <li><span>${APP_CONFIG.shortcuts.h1.toUpperCase()}</span> Título 1 (H1)</li>
             <li><span>${APP_CONFIG.shortcuts.h2.toUpperCase()}</span> Título 2 (H2)</li>
             <li><span>${APP_CONFIG.shortcuts.p.toUpperCase()}</span> Párrafo normal</li>
+            <li><span>${APP_CONFIG.shortcuts.ul.toUpperCase()}</span> Lista de puntos</li>
+            <li><span>${APP_CONFIG.shortcuts.ol.toUpperCase()}</span> Lista numerada</li>
             <li><span>${APP_CONFIG.shortcuts.save.toUpperCase()}</span> Guardar apuntes</li>
         `;
         modalOverlay.classList.remove('hidden');
@@ -429,13 +436,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Close when clicking outside
         document.addEventListener('click', (e) => {
             if (moreToolsMenu.classList.contains('show') && !moreToolsMenu.contains(e.target)) {
-                moreToolsMenu.classList.remove('show');
-            }
-        });
-
-        // Close when a tool is clicked inside the menu
-        moreToolsMenu.addEventListener('click', (e) => {
-            if (e.target.closest('.tool-btn')) {
                 moreToolsMenu.classList.remove('show');
             }
         });
@@ -672,12 +672,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         // --- Indentation Logic (TAB / Shift+TAB) ---
         if (e.key === 'Tab') {
             e.preventDefault();
-            
-            // Allow native list indentation if inside UL/OL
-            if (document.queryCommandState('insertUnorderedList') || document.queryCommandState('insertOrderedList')) {
-                document.execCommand(e.shiftKey ? 'outdent' : 'indent');
-                return;
-            }
 
             const selection = window.getSelection();
             if (!selection.rangeCount) return;
@@ -691,8 +685,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (currentBlock && currentBlock !== editor) {
                 let currentMargin = parseInt(window.getComputedStyle(currentBlock).marginLeft) || 0;
-                let newMargin = e.shiftKey ? Math.max(0, currentMargin - 40) : currentMargin + 40;
+                let minMargin = currentBlock.tagName === 'LI' ? 40 : 0;
+                let newMargin = e.shiftKey ? Math.max(minMargin, currentMargin - 40) : currentMargin + 40;
                 currentBlock.style.marginLeft = `${newMargin}px`;
+                
+                if (currentBlock.tagName === 'LI') {
+                    let isOrdered = currentBlock.parentNode && currentBlock.parentNode.tagName === 'OL';
+                    if (isOrdered) {
+                         if (newMargin <= 40) currentBlock.style.listStyleType = 'decimal';
+                         else if (newMargin === 80) currentBlock.style.listStyleType = 'lower-alpha';
+                         else currentBlock.style.listStyleType = 'lower-roman';
+                    } else {
+                         if (newMargin <= 40) currentBlock.style.listStyleType = 'disc';
+                         else if (newMargin === 80) currentBlock.style.listStyleType = 'circle';
+                         else currentBlock.style.listStyleType = 'square';
+                    }
+                }
             }
             return;
         }
@@ -717,6 +725,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     case 'h1': command = 'formatBlock'; value = 'H1'; break;
                     case 'h2': command = 'formatBlock'; value = 'H2'; break;
                     case 'p': command = 'formatBlock'; value = 'P'; break;
+                    case 'ul': 
+                        e.preventDefault(); 
+                        document.querySelector('[data-command="insertUnorderedList"]').click(); 
+                        return;
+                    case 'ol': 
+                        e.preventDefault(); 
+                        document.querySelector('[data-command="insertOrderedList"]').click(); 
+                        return;
                     case 'save':
                         e.preventDefault();
                         saveCurrentTopic().then(() => showSaveStatus());
@@ -761,7 +777,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 currentBlock = currentBlock.parentNode;
             }
 
-            if (currentBlock && (currentBlock.tagName === 'P' || currentBlock.tagName === 'DIV') && currentBlock !== editor) {
+            if (currentBlock && (currentBlock.tagName === 'P' || currentBlock.tagName === 'DIV' || currentBlock.tagName === 'LI') && currentBlock !== editor) {
                 let prevBlock = currentBlock.previousElementSibling;
                 while (prevBlock && prevBlock.tagName === 'BR') {
                     prevBlock = prevBlock.previousElementSibling;
@@ -771,6 +787,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         currentBlock.style.marginLeft = '40px';
                     } else if (prevBlock.tagName === 'H1') {
                         currentBlock.style.marginLeft = '0px';
+                    } else if (prevBlock.style && prevBlock.style.marginLeft) {
+                        currentBlock.style.marginLeft = prevBlock.style.marginLeft;
+                        if (prevBlock.style.listStyleType) {
+                            currentBlock.style.listStyleType = prevBlock.style.listStyleType;
+                        }
                     }
                 }
             }
@@ -799,9 +820,69 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
             
+            // Auto-indent for lists
+            if (command === 'insertUnorderedList' || command === 'insertOrderedList') {
+                setTimeout(() => {
+                    const selection = window.getSelection();
+                    if (selection.rangeCount) {
+                        let currentBlock = selection.getRangeAt(0).startContainer;
+                        if (currentBlock.nodeType === 3) currentBlock = currentBlock.parentNode;
+                        while (currentBlock && currentBlock !== editor && currentBlock.tagName !== 'LI') {
+                            currentBlock = currentBlock.parentNode;
+                        }
+                        if (currentBlock && currentBlock.tagName === 'LI') {
+                            currentBlock.style.marginLeft = '40px';
+                            if (command === 'insertOrderedList') {
+                                currentBlock.style.listStyleType = 'decimal';
+                            } else {
+                                currentBlock.style.listStyleType = 'disc';
+                            }
+                        }
+                    }
+                }, 10);
+            }
+            
             editor.focus();
+            updateActiveToolbarButtons();
         });
     });
+
+    // --- Active Toolbar Highlight ---
+    function updateActiveToolbarButtons() {
+        const formatCommands = ['bold', 'italic', 'underline'];
+        
+        toolBtns.forEach(btn => {
+            const command = btn.dataset.command;
+            const value = btn.dataset.value;
+            
+            if (formatCommands.includes(command)) {
+                if (document.queryCommandState(command)) btn.classList.add('active');
+                else btn.classList.remove('active');
+            } else if (command === 'formatBlock') {
+                const currentBlock = document.queryCommandValue('formatBlock');
+                if (currentBlock && currentBlock.toLowerCase() === value.toLowerCase()) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            } else if (command === 'insertUnorderedList') {
+                if (document.queryCommandState('insertUnorderedList')) btn.classList.add('active');
+                else btn.classList.remove('active');
+            } else if (command === 'insertOrderedList') {
+                if (document.queryCommandState('insertOrderedList')) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+        });
+    }
+
+    document.addEventListener('selectionchange', () => {
+        if (document.activeElement === editor || editor.contains(document.activeElement)) {
+            updateActiveToolbarButtons();
+        }
+    });
+    
+    editor.addEventListener('click', updateActiveToolbarButtons);
+    editor.addEventListener('keyup', updateActiveToolbarButtons);
 
     noteImageInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
