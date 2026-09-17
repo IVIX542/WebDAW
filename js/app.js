@@ -1159,6 +1159,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // --- Lightbox Logic ---
+    const lightboxOverlay = document.getElementById('lightbox-overlay');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxClose = document.getElementById('lightbox-close');
+
+    function openLightbox(src) {
+        lightboxImg.src = src;
+        lightboxOverlay.classList.remove('hidden');
+    }
+
+    function closeLightbox() {
+        lightboxOverlay.classList.add('hidden');
+        setTimeout(() => lightboxImg.src = '', 300);
+    }
+
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightboxOverlay.addEventListener('click', (e) => {
+        if (e.target === lightboxOverlay) closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !lightboxOverlay.classList.contains('hidden')) {
+            closeLightbox();
+        }
+    });
+
+    galleryGrid.addEventListener('click', (e) => {
+        if (e.target.tagName === 'IMG') {
+            openLightbox(e.target.src);
+        }
+    });
+
     // Init
     updateEditorVisibility();
     loadSubjectData();
