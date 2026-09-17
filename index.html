@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAW Notes App</title>
+    <title>Apuntes DAW2</title>
+    <link rel="icon" type="image/png" href="img/code.png">
     <meta name="description" content="Aplicación de apuntes para 2º de DAW">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div id="mobile-overlay" class="mobile-overlay hidden"></div>
     <div class="app-container">
@@ -30,11 +33,16 @@
             <header class="top-header">
                 <div class="header-left">
                     <button id="mobile-menu-btn" class="mobile-toggle-btn" title="Menú">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
                     </button>
                     <h2 id="current-subject-title">Desarrollo Web en Entorno Cliente</h2>
                 </div>
-                
+
                 <div class="search-container">
                     <input type="search" id="global-search" placeholder="🔍 Buscar en la teoría..." autocomplete="off">
                     <div id="search-results" class="search-results-dropdown hidden"></div>
@@ -65,27 +73,34 @@
                         <!-- Editor Container -->
                         <div class="editor-container hidden" id="editor-container">
                             <div class="mobile-topic-header">
-                                <button id="mobile-topics-btn" class="primary-btn small-btn outline-btn">📚 Ver Temas</button>
+                                <button id="mobile-topics-btn" class="primary-btn small-btn outline-btn">📚 Ver
+                                    Temas</button>
                             </div>
                             <h3 id="current-topic-title" class="topic-title-display"></h3>
                             <div class="editor-toolbar">
                                 <div class="toolbar-group">
                                     <button class="tool-btn" data-command="bold" title="Negrita"><b>B</b></button>
                                     <button class="tool-btn" data-command="italic" title="Cursiva"><i>I</i></button>
-                                    <button class="tool-btn" data-command="underline" title="Subrayado"><u>U</u></button>
+                                    <button class="tool-btn" data-command="underline"
+                                        title="Subrayado"><u>U</u></button>
                                 </div>
                                 <div class="toolbar-group mobile-only-btn">
                                     <button id="more-tools-toggle" class="tool-btn" title="Más opciones">⋮</button>
                                 </div>
                                 <div id="more-tools-menu" class="more-tools-menu">
                                     <div class="toolbar-group">
-                                        <button class="tool-btn" data-command="formatBlock" data-value="H1" title="Título 1">H1</button>
-                                        <button class="tool-btn" data-command="formatBlock" data-value="H2" title="Título 2">H2</button>
-                                        <button class="tool-btn" data-command="formatBlock" data-value="P" title="Párrafo">P</button>
+                                        <button class="tool-btn" data-command="formatBlock" data-value="H1"
+                                            title="Título 1">H1</button>
+                                        <button class="tool-btn" data-command="formatBlock" data-value="H2"
+                                            title="Título 2">H2</button>
+                                        <button class="tool-btn" data-command="formatBlock" data-value="P"
+                                            title="Párrafo">P</button>
                                     </div>
                                     <div class="toolbar-group">
-                                        <button class="tool-btn" data-command="insertUnorderedList" title="Lista">ul</button>
-                                        <button class="tool-btn" data-command="insertOrderedList" title="Lista numerada">ol</button>
+                                        <button class="tool-btn" data-command="insertUnorderedList"
+                                            title="Lista">ul</button>
+                                        <button class="tool-btn" data-command="insertOrderedList"
+                                            title="Lista numerada">ol</button>
                                     </div>
                                 </div>
                                 <div class="toolbar-group ml-auto">
@@ -97,13 +112,15 @@
                                     <button id="save-notes-btn" class="primary-btn">Guardar</button>
                                 </div>
                             </div>
-                            <div id="editor" class="rich-text-editor" contenteditable="true" placeholder="Escribe tus apuntes de teoría aquí..."></div>
+                            <div id="editor" class="rich-text-editor" contenteditable="true"
+                                placeholder="Escribe tus apuntes de teoría aquí..."></div>
                             <div id="save-status" class="status-msg">Guardado localmente</div>
                         </div>
-                        
+
                         <div id="no-topic-selected" class="no-selection-msg">
                             <div class="no-selection-content">
-                                <button id="mobile-topics-btn-empty" class="primary-btn mb-4 mobile-only">📚 Ver Temas</button>
+                                <button id="mobile-topics-btn-empty" class="primary-btn mb-4 mobile-only">📚 Ver
+                                    Temas</button>
                                 <p>Selecciona un tema o crea uno nuevo para empezar a escribir.</p>
                             </div>
                         </div>
@@ -198,7 +215,7 @@
                 <button class="set-tab-btn" data-target="set-subjects">Asignaturas</button>
                 <button class="set-tab-btn" data-target="set-shortcuts">Atajos</button>
             </div>
-            
+
             <div class="settings-content">
                 <!-- Apariencia -->
                 <div id="set-appearance" class="set-pane active">
@@ -224,7 +241,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <!-- Vistas -->
                 <div id="set-layout" class="set-pane">
                     <div class="set-group">
@@ -252,7 +269,8 @@
 
                 <!-- Atajos -->
                 <div id="set-shortcuts" class="set-pane">
-                    <p class="set-help">Haz clic en el cuadro y presiona la combinación exacta de teclas que desees (ej. Ctrl+Shift+B).</p>
+                    <p class="set-help">Haz clic en el cuadro y presiona la combinación exacta de teclas que desees (ej.
+                        Ctrl+Shift+B).</p>
                     <div id="cfg-shortcuts-list">
                         <!-- Generado por JS -->
                     </div>
@@ -269,4 +287,5 @@
     <script src="js/db.js"></script>
     <script src="js/app.js"></script>
 </body>
+
 </html>
