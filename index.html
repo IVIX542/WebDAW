@@ -126,10 +126,35 @@
         </main>
     </div>
 
-    <!-- Context Menu -->
+    <!-- Context Menu for Topics -->
     <div id="context-menu" class="context-menu hidden">
         <button id="ctx-rename">Renombrar Tema</button>
         <button id="ctx-delete" class="danger">Eliminar Tema</button>
+    </div>
+
+    <!-- Context Menu for Editor -->
+    <div id="editor-context-menu" class="context-menu hidden">
+        <button data-command="bold"><b>B</b> Negrita</button>
+        <button data-command="italic"><i>I</i> Cursiva</button>
+        <button data-command="underline"><u>U</u> Subrayado</button>
+        <hr class="ctx-divider">
+        <button data-command="formatBlock" data-value="H1">H1 Título 1</button>
+        <button data-command="formatBlock" data-value="H2">H2 Título 2</button>
+        <button data-command="formatBlock" data-value="P">P Párrafo</button>
+    </div>
+
+    <!-- Floating Image Toolbar -->
+    <div id="image-toolbar" class="image-toolbar hidden">
+        <div class="img-toolbar-group">
+            <button class="img-tool-btn" data-align="left" title="Alinear Izquierda">⇤</button>
+            <button class="img-tool-btn" data-align="center" title="Centrar">↔</button>
+            <button class="img-tool-btn" data-align="right" title="Alinear Derecha">⇥</button>
+        </div>
+        <div class="img-toolbar-group">
+            <button class="img-tool-btn" data-size="small" title="Pequeño">S</button>
+            <button class="img-tool-btn" data-size="medium" title="Mediano">M</button>
+            <button class="img-tool-btn" data-size="large" title="Grande">L</button>
+        </div>
     </div>
 
     <!-- Custom Modals -->

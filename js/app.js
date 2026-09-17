@@ -948,6 +948,193 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    // ==========================================
+    // EDITOR ENHANCEMENTS: Context Menu & Images
+    // ==========================================
+    const editorContextMenu = document.getElementById('editor-context-menu');
+    const imageToolbar = document.getElementById('image-toolbar');
+    let activeEditorImage = null;
+
+    // 1. Editor Context Menu
+    editor.addEventListener('contextmenu', (e) => {
+        if (e.target.tagName === 'IMG') return;
+        
+        e.preventDefault();
+        contextMenu.classList.add('hidden');
+        imageToolbar.classList.add('hidden');
+        
+        editorContextMenu.style.left = `${e.pageX}px`;
+        editorContextMenu.style.top = `${e.pageY}px`;
+        editorContextMenu.classList.remove('hidden');
+    });
+
+    editorContextMenu.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        
+        const command = btn.dataset.command;
+        const value = btn.dataset.value || null;
+        
+        if (command) {
+            document.execCommand(command, false, value);
+            
+            if (command === 'formatBlock' && (value === 'H1' || value === 'H2')) {
+                const selection = window.getSelection();
+                if (selection.rangeCount) {
+                    let currentBlock = selection.getRangeAt(0).startContainer;
+                    if (currentBlock.nodeType === 3) currentBlock = currentBlock.parentNode;
+                    while (currentBlock && currentBlock !== editor && !['P', 'H1', 'H2', 'DIV', 'LI'].includes(currentBlock.tagName)) {
+                        currentBlock = currentBlock.parentNode;
+                    }
+                    if (currentBlock && currentBlock !== editor) {
+                        currentBlock.style.marginLeft = value === 'H2' ? '40px' : '0px';
+                    }
+                }
+            }
+        }
+        
+        editorContextMenu.classList.add('hidden');
+        editor.focus();
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!editorContextMenu.contains(e.target)) {
+            editorContextMenu.classList.add('hidden');
+        }
+        if (!imageToolbar.contains(e.target) && e.target.tagName !== 'IMG') {
+            imageToolbar.classList.add('hidden');
+            if (activeEditorImage) {
+                activeEditorImage.style.outline = 'none';
+                activeEditorImage = null;
+            }
+        }
+    });
+
+    // 2. Image Click & Toolbar
+    editor.addEventListener('click', (e) => {
+        if (e.target.tagName === 'IMG') {
+            e.preventDefault();
+            
+            if (activeEditorImage) activeEditorImage.style.outline = 'none';
+            
+            activeEditorImage = e.target;
+            activeEditorImage.style.outline = '3px solid var(--accent-primary)';
+            
+            const rect = activeEditorImage.getBoundingClientRect();
+            // Show above the image
+            imageToolbar.style.left = `${rect.left + window.scrollX}px`;
+            imageToolbar.style.top = `${Math.max(0, rect.top + window.scrollY - 50)}px`;
+            imageToolbar.classList.remove('hidden');
+        }
+    });
+
+    imageToolbar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.img-tool-btn');
+        if (!btn || !activeEditorImage) return;
+        
+        const align = btn.dataset.align;
+        const size = btn.dataset.size;
+        
+        if (align) {
+            if (align === 'left') {
+                activeEditorImage.style.display = 'block';
+                activeEditorImage.style.float = 'left';
+                activeEditorImage.style.margin = '0 1rem 1rem 0';
+            } else if (align === 'right') {
+                activeEditorImage.style.display = 'block';
+                activeEditorImage.style.float = 'right';
+                activeEditorImage.style.margin = '0 0 1rem 1rem';
+            } else {
+                activeEditorImage.style.display = 'block';
+                activeEditorImage.style.float = 'none';
+                activeEditorImage.style.margin = '1rem auto';
+            }
+        }
+        
+        if (size) {
+            if (size === 'small') activeEditorImage.style.width = '25%';
+            else if (size === 'medium') activeEditorImage.style.width = '50%';
+            else if (size === 'large') activeEditorImage.style.width = '100%';
+        }
+        
+        const rect = activeEditorImage.getBoundingClientRect();
+        imageToolbar.style.left = `${rect.left + window.scrollX}px`;
+        imageToolbar.style.top = `${Math.max(0, rect.top + window.scrollY - 50)}px`;
+    });
+
+    // 3. Custom Drag and Drop Animation for Images
+    let draggedImage = null;
+    let dragGhost = null;
+
+    editor.addEventListener('dragstart', (e) => {
+        if (e.target.tagName === 'IMG') {
+            draggedImage = e.target;
+            
+            dragGhost = draggedImage.cloneNode();
+            dragGhost.style.position = 'absolute';
+            dragGhost.style.top = '-1000px';
+            dragGhost.style.width = '120px';
+            dragGhost.style.height = 'auto';
+            dragGhost.style.opacity = '0.9';
+            dragGhost.style.boxShadow = '0 15px 30px rgba(0,0,0,0.5)';
+            dragGhost.style.borderRadius = '8px';
+            dragGhost.style.zIndex = '9999';
+            dragGhost.style.border = '2px solid var(--accent-primary)';
+            document.body.appendChild(dragGhost);
+            
+            e.dataTransfer.setDragImage(dragGhost, 60, 60);
+            e.dataTransfer.effectAllowed = 'move';
+            
+            setTimeout(() => { draggedImage.style.opacity = '0.3'; }, 0);
+            imageToolbar.classList.add('hidden');
+            if (activeEditorImage) activeEditorImage.style.outline = 'none';
+        }
+    });
+
+    editor.addEventListener('dragend', (e) => {
+        if (draggedImage) {
+            draggedImage.style.opacity = '1';
+            draggedImage = null;
+        }
+        if (dragGhost) {
+            dragGhost.remove();
+            dragGhost = null;
+        }
+    });
+
+    editor.addEventListener('dragover', (e) => {
+        if (draggedImage) {
+            e.preventDefault(); // allow drop
+            e.dataTransfer.dropEffect = 'move';
+        }
+    });
+
+    editor.addEventListener('drop', (e) => {
+        if (draggedImage) {
+            e.preventDefault();
+            
+            let range;
+            if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(e.clientX, e.clientY);
+            } else if (e.rangeParent) {
+                range = document.createRange();
+                range.setStart(e.rangeParent, e.rangeOffset);
+            }
+            
+            if (range) {
+                range.insertNode(draggedImage);
+                window.getSelection().removeAllRanges();
+            }
+            
+            draggedImage.style.opacity = '1';
+            draggedImage = null;
+            if (dragGhost) {
+                dragGhost.remove();
+                dragGhost = null;
+            }
+        }
+    });
+
     // --- Data Loading ---
     async function loadSubjectData() {
         await loadTopics();

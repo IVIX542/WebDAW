@@ -231,6 +231,18 @@ body {
 .context-menu button:hover { background: var(--bg-panel-hover); }
 .context-menu button.danger { color: #ef4444; }
 .context-menu button.danger:hover { background: rgba(239, 68, 68, 0.1); }
+.ctx-divider { border: 0; border-top: 1px solid var(--border-color); margin: 0.3rem 0; }
+.context-menu button b { font-weight: 800; color: var(--accent-primary); margin-right: 0.5rem; display: inline-block; width: 16px; text-align: center; }
+.context-menu button i { font-style: italic; color: var(--accent-primary); margin-right: 0.5rem; display: inline-block; width: 16px; text-align: center; }
+.context-menu button u { text-decoration: underline; color: var(--accent-primary); margin-right: 0.5rem; display: inline-block; width: 16px; text-align: center; }
+
+/* Image Toolbar */
+.image-toolbar { position: absolute; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.3rem; box-shadow: var(--shadow-soft); z-index: 1900; display: flex; gap: 0.5rem; }
+.img-toolbar-group { display: flex; gap: 0.2rem; border-right: 1px solid var(--border-color); padding-right: 0.5rem; }
+.img-toolbar-group:last-child { border-right: none; padding-right: 0; }
+.img-tool-btn { background: transparent; border: none; color: var(--text-primary); cursor: pointer; width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: all 0.2s; }
+.img-tool-btn:hover { background: var(--bg-panel-hover); color: var(--accent-primary); }
+.img-tool-btn.active { background: rgba(129, 140, 248, 0.2); color: var(--accent-primary); }
 
 /* Settings Modal */
 .settings-modal { width: 600px; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; }
