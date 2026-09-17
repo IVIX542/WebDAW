@@ -7,8 +7,10 @@
     <title>Apuntes DAW2</title>
     <link rel="icon" type="image/png" href="img/code.png">
     <meta name="description" content="Aplicación de apuntes para 2º de DAW">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <!-- html2pdf for PDF export -->
+    <script src="js/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
@@ -65,6 +67,7 @@
                                 <button id="new-topic-btn" class="primary-btn small-btn">+ Nuevo</button>
                                 <button id="close-topics-btn" class="mobile-close-btn">&times;</button>
                             </div>
+                            <button id="export-subject-btn" class="primary-btn small-btn outline-btn" style="margin: 0 1rem 1rem 1rem; width: calc(100% - 2rem);">📚 Exportar Asignatura</button>
                             <div id="topics-list" class="topics-list">
                                 <!-- Topics will be loaded here -->
                             </div>
@@ -109,6 +112,10 @@
                                     </label>
                                 </div>
                                 <div class="toolbar-group">
+                                    <label class="tool-btn upload-btn" title="Importar Tema (.txt)">
+                                        📤 <input type="file" id="import-topic-input" accept=".txt" hidden>
+                                    </label>
+                                    <button id="export-topic-btn" class="tool-btn" title="Exportar Tema">📥</button>
                                     <button id="save-notes-btn" class="primary-btn">Guardar</button>
                                 </div>
                             </div>
@@ -209,6 +216,20 @@
             </ul>
             <div class="modal-actions">
                 <button id="shortcuts-close" class="primary-btn">Cerrar</button>
+            </div>
+        </div>
+
+        <!-- Export Modal -->
+        <div id="export-modal" class="custom-modal hidden">
+            <h3>Exportar Apuntes</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;" id="export-modal-desc">Elige el formato de descarga.</p>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem;">
+                <button id="export-pdf-btn" class="primary-btn" style="width: 100%; justify-content: flex-start; background: rgba(255,255,255,0.1); color: var(--text-primary);">📄 Formato PDF (.pdf)</button>
+                <button id="export-doc-btn" class="primary-btn" style="width: 100%; justify-content: flex-start; background: rgba(255,255,255,0.1); color: var(--text-primary);">📝 Word / Texto Enriquecido (.doc)</button>
+                <button id="export-txt-btn" class="primary-btn" style="width: 100%; justify-content: flex-start; background: rgba(255,255,255,0.1); color: var(--text-primary);">📋 Texto Plano Markdown (.txt)</button>
+            </div>
+            <div class="modal-actions">
+                <button id="export-cancel" class="cancel-btn">Cancelar</button>
             </div>
         </div>
 

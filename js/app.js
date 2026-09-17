@@ -1191,6 +1191,266 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // ==========================================
+    // EXPORT & IMPORT LOGIC
+    // ==========================================
+    const exportTopicBtn = document.getElementById('export-topic-btn');
+    const exportSubjectBtn = document.getElementById('export-subject-btn');
+    const importTopicInput = document.getElementById('import-topic-input');
+    const exportModal = document.getElementById('export-modal');
+    const exportCancel = document.getElementById('export-cancel');
+    const exportPdfBtn = document.getElementById('export-pdf-btn');
+    const exportDocBtn = document.getElementById('export-doc-btn');
+    const exportTxtBtn = document.getElementById('export-txt-btn');
+    
+    let currentExportTarget = 'topic'; // 'topic' or 'subject'
+
+    if (exportTopicBtn) exportTopicBtn.addEventListener('click', () => {
+        if (!currentTopicId) return;
+        currentExportTarget = 'topic';
+        modalOverlay.classList.remove('hidden');
+        exportModal.classList.remove('hidden');
+    });
+
+    if (exportSubjectBtn) exportSubjectBtn.addEventListener('click', () => {
+        currentExportTarget = 'subject';
+        modalOverlay.classList.remove('hidden');
+        exportModal.classList.remove('hidden');
+    });
+
+    if (exportCancel) exportCancel.addEventListener('click', () => {
+        exportModal.classList.add('hidden');
+        modalOverlay.classList.add('hidden');
+    });
+
+    // Parsers para TXT
+    function htmlToTxt(html) {
+        let div = document.createElement('div');
+        div.innerHTML = html;
+        
+        div.querySelectorAll('img').forEach(img => img.remove()); // Quitar imágenes
+        
+        let txt = '';
+        div.childNodes.forEach(node => {
+            if (node.nodeType === 3) {
+                let text = node.textContent.trim();
+                if(text) txt += text + '\n\n';
+            } else if (node.nodeType === 1) {
+                let margin = parseInt(node.style.marginLeft) || 0;
+                let tabs = '\t'.repeat(Math.floor(margin / 40));
+                
+                let content = node.innerHTML;
+                content = content.replace(/<b>(.*?)<\/b>/gi, '**$1**')
+                                 .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+                                 .replace(/<i>(.*?)<\/i>/gi, '*$1*')
+                                 .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+                                 .replace(/<u>(.*?)<\/u>/gi, '__$1__');
+                
+                let tmp = document.createElement('div');
+                tmp.innerHTML = content;
+                let plain = (tmp.textContent || tmp.innerText || '').trim();
+                
+                if (!plain && node.tagName !== 'BR') return;
+
+                if (node.tagName === 'H1') txt += tabs + '# ' + plain + '\n\n';
+                else if (node.tagName === 'H2') txt += tabs + '## ' + plain + '\n\n';
+                else if (node.tagName === 'LI') txt += tabs + '- ' + plain + '\n';
+                else if (node.tagName === 'UL' || node.tagName === 'OL') txt += htmlToTxt(node.innerHTML) + '\n';
+                else if (node.tagName === 'BR') txt += '\n';
+                else txt += tabs + plain + '\n\n';
+            }
+        });
+        return txt.trim();
+    }
+
+    function txtToHtml(txt) {
+        let lines = txt.split('\n');
+        let html = '';
+        
+        lines.forEach(line => {
+            if (!line.trim()) {
+                html += '<br>';
+                return;
+            }
+            
+            let tabs = 0;
+            while (line[tabs] === '\t') tabs++;
+            let margin = tabs * 40;
+            let style = margin > 0 ? ` style="margin-left: ${margin}px;"` : '';
+            
+            let trimmed = line.trim();
+            let parsed = trimmed
+                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                .replace(/\*(.*?)\*/g, '<i>$1</i>')
+                .replace(/__(.*?)__/g, '<u>$1</u>');
+                
+            if (parsed.startsWith('# ')) {
+                html += `<h1${style}>${parsed.substring(2)}</h1>`;
+            } else if (parsed.startsWith('## ')) {
+                html += `<h2${style}>${parsed.substring(3)}</h2>`;
+            } else if (parsed.startsWith('- ')) {
+                html += `<li${style}>${parsed.substring(2)}</li>`;
+            } else {
+                html += `<p${style}>${parsed}</p>`;
+            }
+        });
+        return html;
+    }
+
+    if (importTopicInput) importTopicInput.addEventListener('change', (e) => {
+        if (!currentTopicId || !e.target.files.length) return;
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const txt = e.target.result;
+            const html = txtToHtml(txt);
+            editor.innerHTML = html;
+            await saveCurrentTopic();
+            showSaveStatus();
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    });
+
+    // Helper: Conseguir HTML de exportación
+    async function getExportHtml() {
+        try {
+            if (currentExportTarget === 'topic') {
+                const topics = await window.DB.getTopicsBySubject(currentSubject);
+                const topic = topics.find(t => String(t.id) === String(currentTopicId));
+                if (!topic) return '<h1>Error</h1><p>No se pudo encontrar el tema.</p>';
+                
+                let content = topic.content;
+                // Si el tema exportado es el que está abierto, usar el contenido en vivo del editor
+                if (String(topic.id) === String(currentTopicId)) {
+                    content = editor.innerHTML;
+                }
+                
+                return `<h1>${topic.title}</h1><hr>${content}`;
+            } else {
+                const topics = await window.DB.getTopicsBySubject(currentSubject);
+                let combinedHtml = '';
+                topics.forEach(t => {
+                    let content = t.content;
+                    if (String(t.id) === String(currentTopicId)) {
+                        content = editor.innerHTML;
+                    }
+                    combinedHtml += `<div style="page-break-before: always; margin-top: 2rem;">
+                                        <h1 style="color: #4f46e5; border-bottom: 2px solid #ccc; padding-bottom: 0.5rem;">${t.title}</h1>
+                                        ${content}
+                                     </div>`;
+                });
+                return combinedHtml;
+            }
+        } catch (e) {
+            console.error("Error generating export HTML:", e);
+            return '<h1>Error</h1><p>Ocurrió un error al generar la exportación.</p>';
+        }
+    }
+
+    // Funciones de descarga con selección de ruta
+    async function saveBlobWithDialog(blob, defaultFilename, description, extensions, mimeType) {
+        if (window.showSaveFilePicker) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: defaultFilename,
+                    types: [{
+                        description: description,
+                        accept: { [mimeType]: extensions }
+                    }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    console.error("SaveFilePicker failed:", e);
+                    fallbackSave(blob, defaultFilename);
+                }
+            }
+        } else {
+            fallbackSave(blob, defaultFilename);
+        }
+    }
+
+    function fallbackSave(blob, filename) {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Export PDF
+    if (exportPdfBtn) exportPdfBtn.addEventListener('click', async () => {
+        const html = await getExportHtml();
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        container.style.padding = '2rem';
+        container.style.color = '#000';
+        container.style.background = '#fff';
+        container.style.fontFamily = 'Inter, Arial, sans-serif';
+        
+        container.querySelectorAll('*').forEach(el => {
+            if (el.tagName !== 'IMG') {
+                el.style.color = '#000';
+            }
+        });
+
+        const filename = currentExportTarget === 'topic' ? currentTopicTitle.textContent : currentSubject;
+        
+        const opt = {
+            margin: 1,
+            filename: `${filename}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        // Generar Blob en lugar de guardar directo
+        html2pdf().set(opt).from(container).output('blob').then(async (pdfBlob) => {
+            await saveBlobWithDialog(pdfBlob, `${filename}.pdf`, 'Documento PDF', ['.pdf'], 'application/pdf');
+            exportModal.classList.add('hidden');
+            modalOverlay.classList.add('hidden');
+        }).catch(err => {
+            console.error("Error al exportar PDF:", err);
+            // Fallback a save tradicional si .output('blob') falla (por versión de librería)
+            html2pdf().set(opt).from(container).save().then(() => {
+                exportModal.classList.add('hidden');
+                modalOverlay.classList.add('hidden');
+            });
+        });
+    });
+
+    // Export DOC
+    if (exportDocBtn) exportDocBtn.addEventListener('click', async () => {
+        const html = await getExportHtml();
+        const preHtml = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title><style>body { font-family: 'Inter', Arial, sans-serif; }</style></head><body>`;
+        const postHtml = "</body></html>";
+        const content = preHtml + html + postHtml;
+        
+        const blob = new Blob(['\ufeff', content], { type: 'application/msword' });
+        const filename = currentExportTarget === 'topic' ? currentTopicTitle.textContent : currentSubject;
+        
+        await saveBlobWithDialog(blob, `${filename}.doc`, 'Documento de Word', ['.doc'], 'application/msword');
+        exportModal.classList.add('hidden');
+        modalOverlay.classList.add('hidden');
+    });
+
+    // Export TXT
+    if (exportTxtBtn) exportTxtBtn.addEventListener('click', async () => {
+        const html = await getExportHtml();
+        const txt = htmlToTxt(html);
+        
+        const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+        const filename = currentExportTarget === 'topic' ? currentTopicTitle.textContent : currentSubject;
+        
+        await saveBlobWithDialog(blob, `${filename}.txt`, 'Documento de Texto', ['.txt'], 'text/plain');
+        exportModal.classList.add('hidden');
+        modalOverlay.classList.add('hidden');
+    });
+
     // Init
     updateEditorVisibility();
     loadSubjectData();
